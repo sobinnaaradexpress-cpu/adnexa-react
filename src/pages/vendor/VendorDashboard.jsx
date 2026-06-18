@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { fetchProducts, fetchOrders } from '../../api/driveApi'
 import { 
   Package, TrendingUp, DollarSign, Sliders, 
@@ -44,6 +45,7 @@ export default function VendorDashboard() {
   const [loading, setLoading] = useState(true)
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false)
   const [toast, setToast] = useState({ show: false, message: '' })
+  const navigate = useNavigate()
 
   // Customization State
   const [settings, setSettings] = useState(() => {
@@ -95,6 +97,18 @@ export default function VendorDashboard() {
   const showToast = (message) => {
     setToast({ show: true, message })
     setTimeout(() => setToast({ show: false, message: '' }), 3000)
+  }
+
+  const exportSalesCSV = () => {
+    const csvContent = "data:text/csv;charset=utf-8,Order ID,Customer,Total,Status\n" + orders.map(o => `${o.id},${o.customer},${o.total},${o.status}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "vendor_sales.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Sales report exported successfully!');
   }
 
   const totalRevenue = orders.filter(o => o.status !== 'Pending').reduce((sum, o) => sum + Number(o.total || 0), 0)
@@ -285,19 +299,19 @@ export default function VendorDashboard() {
         <>
           <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '500' }}>Store Shortcuts</h3>
           <div className="quick-actions-grid">
-            <button className={`quick-action-btn ${glassClass}`} onClick={() => showToast('Simulating: Accessing product creation page...')}>
+            <button className={`quick-action-btn ${glassClass}`} onClick={() => navigate('/vendor/products')}>
               <div className="quick-action-icon"><PlusCircle size={20} /></div>
               <span>Add Product</span>
             </button>
-            <button className={`quick-action-btn ${glassClass}`} onClick={() => showToast('Simulating: Loading order listings...')}>
+            <button className={`quick-action-btn ${glassClass}`} onClick={() => navigate('/vendor/orders')}>
               <div className="quick-action-icon"><ShoppingBag size={20} /></div>
               <span>Manage Orders</span>
             </button>
-            <button className={`quick-action-btn ${glassClass}`} onClick={() => showToast('Simulating: Loading shop configs...')}>
+            <button className={`quick-action-btn ${glassClass}`} onClick={() => navigate('/vendor/settings')}>
               <div className="quick-action-icon"><Settings size={20} /></div>
               <span>Store Settings</span>
             </button>
-            <button className={`quick-action-btn ${glassClass}`} onClick={() => showToast('Simulating: Exporting sales spreadsheets...')}>
+            <button className={`quick-action-btn ${glassClass}`} onClick={exportSalesCSV}>
               <div className="quick-action-icon"><FileText size={20} /></div>
               <span>Sales Reports</span>
             </button>

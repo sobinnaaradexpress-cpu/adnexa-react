@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { fetchVendors, fetchOrders } from '../../api/driveApi'
 import { 
   Activity, Users, ShoppingCart, Sliders, 
@@ -57,6 +58,7 @@ export default function AdminDashboard() {
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false)
   const [toast, setToast] = useState({ show: false, message: '' })
   const [isRegisterVendorOpen, setIsRegisterVendorOpen] = useState(false)
+  const navigate = useNavigate()
   
   // Tab State
   const [activeTab, setActiveTab] = useState('vendors') // 'vendors' | 'logistics'
@@ -122,6 +124,7 @@ export default function AdminDashboard() {
       name: formData.get('name'),
       email: formData.get('email'),
       phone: formData.get('phone'),
+      password: formData.get('password'), // Captured password
       products: 0,
       revenue: 0,
       status: 'Active'
@@ -129,6 +132,18 @@ export default function AdminDashboard() {
     setVendors([newVendor, ...vendors]);
     showToast(`${newVendor.name} has been successfully registered!`);
     setIsRegisterVendorOpen(false);
+  }
+
+  const exportAuditCSV = () => {
+    const csvContent = "data:text/csv;charset=utf-8,ID,Name,Revenue,Status\n" + vendors.map(v => `${v.id},${v.name},${v.revenue},${v.status}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "network_audit.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Audit exported successfully!');
   }
 
   const totalRevenue = vendors.reduce((sum, v) => sum + (Number(v.revenue) || 0), 0)
@@ -357,11 +372,11 @@ export default function AdminDashboard() {
                   <div className="quick-action-icon"><UserPlus size={20} /></div>
                   <span>Register Vendor</span>
                 </button>
-                <button className={`quick-action-btn ${glassClass}`} onClick={() => showToast('Simulating: Opening system configurations...')}>
+                <button className={`quick-action-btn ${glassClass}`} onClick={() => navigate('/admin/vendors')}>
                   <div className="quick-action-icon"><Settings size={20} /></div>
-                  <span>System Settings</span>
+                  <span>Manage Vendors</span>
                 </button>
-                <button className={`quick-action-btn ${glassClass}`} onClick={() => showToast('Simulating: Exporting audit spreadsheets...')}>
+                <button className={`quick-action-btn ${glassClass}`} onClick={exportAuditCSV}>
                   <div className="quick-action-icon"><FileSpreadsheet size={20} /></div>
                   <span>Export Audit</span>
                 </button>
@@ -586,6 +601,10 @@ export default function AdminDashboard() {
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: 'var(--muted)' }}>Phone Number</label>
                   <input name="phone" required type="text" placeholder="+977 9800000000" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: 'var(--muted)' }}>Initial Password</label>
+                  <input name="password" required type="password" placeholder="Enter password for vendor" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
