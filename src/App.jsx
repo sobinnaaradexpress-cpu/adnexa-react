@@ -34,7 +34,7 @@ function App() {
       <ModalProvider>
         <AuthProvider>
           <CartProvider>
-            <BrowserRouter>
+            <BrowserRouter basename={import.meta.env.BASE_URL}>
               <Routes>
             {/* Public Facing Pages */}
             <Route path="/" element={<FrontLayout />}>
