@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchVendors, fetchOrders } from '../../api/driveApi'
+import { fetchVendors, fetchOrders, addVendor } from '../../api/driveApi'
 import { 
   Activity, Users, ShoppingCart, Sliders, 
   UserPlus, FileSpreadsheet, Settings, Truck, RefreshCw, Package, ArrowUpRight, ArrowDownRight
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
     setTimeout(() => setToast({ show: false, message: '' }), 3000)
   }
 
-  const handleRegisterVendor = (e) => {
+  const handleRegisterVendor = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const newVendor = {
@@ -129,8 +129,17 @@ export default function AdminDashboard() {
       revenue: 0,
       status: 'Active'
     };
+    
+    // Optimistic UI update
     setVendors([newVendor, ...vendors]);
-    showToast(`${newVendor.name} has been successfully registered!`);
+    
+    try {
+      await addVendor(newVendor);
+      showToast(`${newVendor.name} has been successfully registered!`);
+    } catch (err) {
+      showToast(`Error saving to backend, but added locally.`);
+    }
+    
     setIsRegisterVendorOpen(false);
   }
 

@@ -3,8 +3,9 @@ const SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL
 // Generic fetch function
 const fetchSheet = async (sheetName) => {
   if (!SCRIPT_URL || SCRIPT_URL === "YOUR_WEB_APP_URL_HERE") {
-    console.error("VITE_GOOGLE_SCRIPT_URL is not configured.");
-    return [];
+    console.warn(`Mocking fetch for ${sheetName} from localStorage`);
+    const cached = localStorage.getItem(`mock_${sheetName}`);
+    return cached ? JSON.parse(cached) : [];
   }
   try {
     const res = await fetch(`${SCRIPT_URL}?action=${sheetName}`);
@@ -19,9 +20,30 @@ const fetchSheet = async (sheetName) => {
 // Generic POST function
 const postSheet = async (action, data) => {
   if (!SCRIPT_URL || SCRIPT_URL === "YOUR_WEB_APP_URL_HERE") {
-    console.error("VITE_GOOGLE_SCRIPT_URL is not configured.");
-    throw new Error("API URL missing");
+    console.warn(`Mocking post for ${action} to localStorage`);
+    const parts = action.split('_');
+    const op = parts[0]; 
+    const sheetName = parts[1];
+    
+    let currentData = [];
+    const cached = localStorage.getItem(`mock_${sheetName}`);
+    if (cached) currentData = JSON.parse(cached);
+    
+    if (op === 'add') {
+      currentData.unshift(data);
+    } else if (op === 'update') {
+      const idx = currentData.findIndex(item => item.id === data.id);
+      if (idx !== -1) currentData[idx] = { ...currentData[idx], ...data };
+    } else if (op === 'delete') {
+      currentData = currentData.filter(item => item.id !== data.id);
+    } else if (op === 'replace') {
+      currentData = data; // for settings/integrations that send the whole array/object
+    }
+    
+    localStorage.setItem(`mock_${sheetName}`, JSON.stringify(currentData));
+    return { success: true };
   }
+  
   try {
     await fetch(SCRIPT_URL, {
       method: "POST",
