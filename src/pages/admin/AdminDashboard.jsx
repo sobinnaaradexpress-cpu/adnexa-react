@@ -56,6 +56,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false)
   const [toast, setToast] = useState({ show: false, message: '' })
+  const [isRegisterVendorOpen, setIsRegisterVendorOpen] = useState(false)
   
   // Tab State
   const [activeTab, setActiveTab] = useState('vendors') // 'vendors' | 'logistics'
@@ -111,6 +112,23 @@ export default function AdminDashboard() {
   const showToast = (message) => {
     setToast({ show: true, message })
     setTimeout(() => setToast({ show: false, message: '' }), 3000)
+  }
+
+  const handleRegisterVendor = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newVendor = {
+      id: `VEN-${Math.floor(Math.random() * 10000)}`,
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      products: 0,
+      revenue: 0,
+      status: 'Active'
+    };
+    setVendors([newVendor, ...vendors]);
+    showToast(`${newVendor.name} has been successfully registered!`);
+    setIsRegisterVendorOpen(false);
   }
 
   const totalRevenue = vendors.reduce((sum, v) => sum + (Number(v.revenue) || 0), 0)
@@ -335,7 +353,7 @@ export default function AdminDashboard() {
             <>
               <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '500' }}>Admin Shortcuts</h3>
               <div className="quick-actions-grid">
-                <button className={`quick-action-btn ${glassClass}`} onClick={() => showToast('Simulating: Accessing vendor registration...')}>
+                <button className={`quick-action-btn ${glassClass}`} onClick={() => setIsRegisterVendorOpen(true)}>
                   <div className="quick-action-icon"><UserPlus size={20} /></div>
                   <span>Register Vendor</span>
                 </button>
@@ -549,6 +567,35 @@ export default function AdminDashboard() {
         onUpdate={handleUpdateSettings}
         onReset={handleResetSettings}
       />
+
+      {/* Register Vendor Modal */}
+      {isRegisterVendorOpen && (
+        <div className="modal-overlay" onClick={() => setIsRegisterVendorOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', padding: '24px', borderRadius: '12px', width: '100%', maxWidth: '400px', zIndex: 1000 }}>
+            <h3 style={{ marginBottom: '16px', marginTop: '0', fontSize: '20px', fontWeight: '600' }}>Register New Vendor</h3>
+            <form onSubmit={handleRegisterVendor}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: 'var(--muted)' }}>Vendor/Business Name</label>
+                  <input name="name" required type="text" placeholder="e.g. Kathmandu Handicrafts" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: 'var(--muted)' }}>Email Address</label>
+                  <input name="email" required type="email" placeholder="vendor@example.com" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: 'var(--muted)' }}>Phone Number</label>
+                  <input name="phone" required type="text" placeholder="+977 9800000000" style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                <button type="button" onClick={() => setIsRegisterVendorOpen(false)} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer', fontWeight: '500' }}>Register</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
